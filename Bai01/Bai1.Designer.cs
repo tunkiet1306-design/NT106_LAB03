@@ -41,6 +41,7 @@
             btnUDPClient.TabIndex = 0;
             btnUDPClient.Text = "UDP CLIENT";
             btnUDPClient.UseVisualStyleBackColor = true;
+            btnUDPClient.Click += btnUDPClient_Click;
             // 
             // btnUDPServer
             // 
@@ -51,6 +52,7 @@
             btnUDPServer.TabIndex = 0;
             btnUDPServer.Text = "UDP SERVER";
             btnUDPServer.UseVisualStyleBackColor = true;
+            btnUDPServer.Click += btnUDPServer_Click;
             // 
             // Bai1
             // 

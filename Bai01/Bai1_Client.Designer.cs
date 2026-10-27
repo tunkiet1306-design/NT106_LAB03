@@ -28,85 +28,86 @@
         /// </summary>
         private void InitializeComponent()
         {
-            textBox1 = new TextBox();
-            textBox2 = new TextBox();
-            richTextBox1 = new RichTextBox();
+            txtIPRemoteHost = new TextBox();
+            txtPort = new TextBox();
             label1 = new Label();
             label2 = new Label();
             label3 = new Label();
             button1 = new Button();
+            rtbMessages = new RichTextBox();
             SuspendLayout();
             // 
-            // textBox1
+            // txtIPRemoteHost
             // 
-            textBox1.Location = new Point(129, 27);
-            textBox1.Name = "textBox1";
-            textBox1.Size = new Size(150, 31);
-            textBox1.TabIndex = 0;
+            txtIPRemoteHost.Location = new Point(169, 24);
+            txtIPRemoteHost.Name = "txtIPRemoteHost";
+            txtIPRemoteHost.Size = new Size(207, 31);
+            txtIPRemoteHost.TabIndex = 0;
             // 
-            // textBox2
+            // txtPort
             // 
-            textBox2.Location = new Point(539, 27);
-            textBox2.Name = "textBox2";
-            textBox2.Size = new Size(150, 31);
-            textBox2.TabIndex = 0;
-            // 
-            // richTextBox1
-            // 
-            richTextBox1.Location = new Point(60, 183);
-            richTextBox1.Name = "richTextBox1";
-            richTextBox1.Size = new Size(690, 172);
-            richTextBox1.TabIndex = 1;
-            richTextBox1.Text = "";
+            txtPort.Location = new Point(499, 24);
+            txtPort.Name = "txtPort";
+            txtPort.Size = new Size(227, 31);
+            txtPort.TabIndex = 0;
             // 
             // label1
             // 
             label1.AutoSize = true;
-            label1.Location = new Point(48, 27);
+            label1.Location = new Point(27, 27);
             label1.Name = "label1";
-            label1.Size = new Size(59, 25);
+            label1.Size = new Size(136, 25);
             label1.TabIndex = 2;
-            label1.Text = "label1";
+            label1.Text = "IP Remote Host";
             // 
             // label2
             // 
             label2.AutoSize = true;
-            label2.Location = new Point(474, 27);
+            label2.Location = new Point(449, 27);
             label2.Name = "label2";
-            label2.Size = new Size(59, 25);
+            label2.Size = new Size(44, 25);
             label2.TabIndex = 2;
-            label2.Text = "label1";
+            label2.Text = "Port";
             // 
             // label3
             // 
             label3.AutoSize = true;
-            label3.Location = new Point(60, 146);
+            label3.Location = new Point(27, 115);
             label3.Name = "label3";
-            label3.Size = new Size(59, 25);
+            label3.Size = new Size(82, 25);
             label3.TabIndex = 2;
-            label3.Text = "label1";
+            label3.Text = "Message";
             // 
             // button1
             // 
-            button1.Location = new Point(329, 383);
+            button1.Location = new Point(327, 361);
             button1.Name = "button1";
-            button1.Size = new Size(112, 34);
+            button1.Size = new Size(166, 55);
             button1.TabIndex = 3;
-            button1.Text = "button1";
+            button1.Text = "Send";
             button1.UseVisualStyleBackColor = true;
+            button1.Click += button1_Click;
+            // 
+            // rtbMessages
+            // 
+            rtbMessages.Location = new Point(27, 143);
+            rtbMessages.Name = "rtbMessages";
+            rtbMessages.Size = new Size(761, 212);
+            rtbMessages.TabIndex = 5;
+            rtbMessages.Text = "";
             // 
             // Bai1_Client
             // 
             AutoScaleDimensions = new SizeF(10F, 25F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(800, 450);
+            Controls.Add(rtbMessages);
             Controls.Add(button1);
             Controls.Add(label3);
             Controls.Add(label2);
             Controls.Add(label1);
-            Controls.Add(richTextBox1);
-            Controls.Add(textBox2);
-            Controls.Add(textBox1);
+            Controls.Add(txtPort);
+            Controls.Add(txtIPRemoteHost);
             Name = "Bai1_Client";
             Text = "Bai1_Client";
             ResumeLayout(false);
@@ -115,12 +116,12 @@
 
         #endregion
 
-        private TextBox textBox1;
-        private TextBox textBox2;
-        private RichTextBox richTextBox1;
+        private TextBox txtIPRemoteHost;
+        private TextBox txtPort;
         private Label label1;
         private Label label2;
         private Label label3;
         private Button button1;
+        private RichTextBox rtbMessages;
     }
 }

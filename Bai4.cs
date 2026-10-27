@@ -8,9 +8,9 @@ using System.Windows.Forms;
 
 namespace LAB03
 {
-    public partial class Bai1_Client : Form
+    public partial class Bai4 : Form
     {
-        public Bai1_Client()
+        public Bai4()
         {
             InitializeComponent();
         }
