@@ -2,4 +2,4 @@
 ## Quy định:
 * Khi làm bài phải clone repo về xong bắt đầu làm, mỗi bài phải có client và server. Vừa phải local host được mà còn phải LAN được
 * Khi commit ghi rõ bài, người làm không tự merger vào branch main
-* Tên đặt tên Form: BaiX.cs, ví dụ: Bai1.cs
+* Tên đặt tên Form: BaiX.cs, ví dụ: Bai1.cs sẽ như là một Form điều hướng cho 2 Form khác là Client và Server và đặt tên là Bai1_Client.cs và Bai1_Server.cs
