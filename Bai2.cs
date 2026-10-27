@@ -10,48 +10,90 @@ namespace LAB03
     public partial class Bai2 : Form
     {
         private Socket? listenerSocket;
-        private Socket? clientSocket;
+        private bool isServerRunning = false;
+        private Socket? tcpClient;
 
         public Bai2()
         {
             InitializeComponent();
         }
 
-        private void btnListen_Click(object sender, EventArgs e)
+        // Hàm ép giao diện ListView phải hiện chữ ngay lập tức từ mọi Thread
+        private void AddServerLog(string msg)
         {
-            // Cho phép luồng ngầm cập nhật giao diện ListView
-            CheckForIllegalCrossThreadCalls = false;
-
-            Thread serverThread = new Thread(new ThreadStart(StartUnsafeThread));
-            serverThread.IsBackground = true;
-            serverThread.Start();
-
-            btnListen.Enabled = false;
-            listViewCommand.Items.Add(new ListViewItem("Telnet running on port 8080..."));
+            if (listViewCommand.InvokeRequired)
+            {
+                listViewCommand.Invoke(new Action(() => listViewCommand.Items.Add(new ListViewItem(msg))));
+            }
+            else
+            {
+                listViewCommand.Items.Add(new ListViewItem(msg));
+            }
         }
 
-        void StartUnsafeThread()
+        // =========================================================
+        // PHẦN 1: TCP SERVER
+        // =========================================================
+        private void btnListen_Click(object sender, EventArgs e)
+        {
+            int port = int.Parse(txtPort.Text.Trim());
+
+            try
+            {
+                listenerSocket = new Socket(
+                    AddressFamily.InterNetwork,
+                    SocketType.Stream,
+                    ProtocolType.Tcp
+                );
+
+                // Khóa độc quyền cổng để không bị dịch vụ Windows cướp kết nối
+                listenerSocket.ExclusiveAddressUse = true;
+
+                IPEndPoint ipepServer = new IPEndPoint(IPAddress.Any, port);
+                listenerSocket.Bind(ipepServer);
+                listenerSocket.Listen(10);
+                isServerRunning = true;
+
+                btnListen.Enabled = false;
+                AddServerLog($"Telnet running on port {port}...");
+
+                Thread serverThread = new Thread(AcceptClients);
+                serverThread.IsBackground = true;
+                serverThread.Start();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Cổng {port} đang bị phần mềm khác chiếm! Hãy đổi số ở ô Port sang 8081 rồi bấm Listen lại.\nChi tiết: {ex.Message}");
+            }
+        }
+
+        void AcceptClients()
+        {
+            try
+            {
+                while (isServerRunning && listenerSocket != null)
+                {
+                    Socket clientSocket = listenerSocket.Accept();
+                    AddServerLog($"New client connected: {clientSocket.RemoteEndPoint}");
+
+                    Thread clientThread = new Thread(() => HandleClient(clientSocket));
+                    clientThread.IsBackground = true;
+                    clientThread.Start();
+                }
+            }
+            catch
+            {
+                // Đóng form
+            }
+        }
+
+        void HandleClient(Socket clientSocket)
         {
             int bytesReceived = 0;
             byte[] recv = new byte[1];
 
-            listenerSocket = new Socket(
-                AddressFamily.InterNetwork,
-                SocketType.Stream,
-                ProtocolType.Tcp
-            );
-
-            // Dùng IPAddress.Any để nhận được cả Localhost (127.0.0.1) và mạng LAN (192.168.x.x)
-            IPEndPoint ipepServer = new IPEndPoint(IPAddress.Any, 8081);
-
             try
             {
-                listenerSocket.Bind(ipepServer);
-                listenerSocket.Listen(-1);
-
-                clientSocket = listenerSocket.Accept();
-                listViewCommand.Items.Add(new ListViewItem("New client connected"));
-
                 while (clientSocket.Connected)
                 {
                     string text = "";
@@ -59,22 +101,94 @@ namespace LAB03
                     {
                         bytesReceived = clientSocket.Receive(recv);
                         if (bytesReceived == 0) break;
-                        text += Encoding.ASCII.GetString(recv);
+                        text += Encoding.UTF8.GetString(recv);
                     } while (text[text.Length - 1] != '\n');
 
                     if (bytesReceived == 0) break;
 
-                    listViewCommand.Items.Add(new ListViewItem(text.TrimEnd('\r', '\n')));
+                    string cleanMessage = text.TrimEnd('\r', '\n');
+                    AddServerLog(cleanMessage);
                 }
             }
-            catch (Exception ex)
+            catch
             {
-                MessageBox.Show(ex.Message);
             }
             finally
             {
-                listenerSocket?.Close();
+                AddServerLog("Client disconnected");
+                clientSocket.Close();
             }
+        }
+
+        // =========================================================
+        // PHẦN 2: TCP CLIENT
+        // =========================================================
+        private void btnConnect_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                string ip = txtServerIP.Text.Trim();
+                int port = int.Parse(txtPort.Text.Trim());
+
+                tcpClient = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                IPEndPoint serverEP = new IPEndPoint(IPAddress.Parse(ip), port);
+
+                tcpClient.Connect(serverEP);
+
+                lstClientLog.Items.Add($"Đã kết nối tới Server {ip}:{port}");
+                btnConnect.Enabled = false;
+                txtMessage.Enabled = true;
+                btnSend.Enabled = true;
+                txtMessage.Focus();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Không thể kết nối tới Server: " + ex.Message);
+            }
+        }
+
+        private void btnSend_Click(object sender, EventArgs e)
+        {
+            if (tcpClient == null || !tcpClient.Connected) return;
+
+            string msg = txtMessage.Text;
+            if (string.IsNullOrEmpty(msg)) return;
+
+            try
+            {
+                byte[] data = Encoding.UTF8.GetBytes(msg + "\n");
+                tcpClient.Send(data);
+
+                lstClientLog.Items.Add("Đã gửi: " + msg);
+                txtMessage.Clear();
+                txtMessage.Focus();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Lỗi khi gửi: " + ex.Message);
+            }
+        }
+
+        private void txtMessage_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                btnSend.PerformClick();
+                e.SuppressKeyPress = true;
+            }
+        }
+
+        private void btnOpenNewWindow_Click(object sender, EventArgs e)
+        {
+            Bai2 newForm = new Bai2();
+            newForm.Show();
+        }
+
+        private void Bai2_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            isServerRunning = false;
+            try { tcpClient?.Close(); } catch { }
+            try { listenerSocket?.Close(); } catch { }
         }
     }
 }
