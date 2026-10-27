@@ -14,5 +14,23 @@ namespace LAB03
         {
             InitializeComponent();
         }
+
+        private void btnServer_Click(object sender, EventArgs e)
+        {
+            FormServer04 frm = new FormServer04();
+
+            frm.Show();
+
+            this.Hide();
+        }
+
+        private void btnClient_Click(object sender, EventArgs e)
+        {
+            FormClient04 frm = new FormClient04();
+
+            frm.Show();
+
+            this.Hide();
+        }
     }
 }
