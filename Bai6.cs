@@ -1,9 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Text;
 using System.Windows.Forms;
 
 namespace LAB03
@@ -13,6 +8,33 @@ namespace LAB03
         public Bai6()
         {
             InitializeComponent();
+        }
+
+        private void btnServer_Click(
+            object sender,
+            EventArgs e)
+        {
+            FormServer06 server =
+                new FormServer06();
+
+            server.Show();
+        }
+
+        private void btnClient_Click(
+            object sender,
+            EventArgs e)
+        {
+            FormClient06 client =
+                new FormClient06();
+
+            client.Show();
+        }
+
+        private void Bai6_Load(
+            object sender,
+            EventArgs e)
+        {
+
         }
     }
 }
