@@ -9,6 +9,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Folder Include="Bai01\" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.Data.SqlClient" Version="7.1.1" />
   </ItemGroup>
 
