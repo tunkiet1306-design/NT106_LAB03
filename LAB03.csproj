@@ -9,7 +9,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="movie.txt" />
     <Folder Include="Bai01\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="movie.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>
