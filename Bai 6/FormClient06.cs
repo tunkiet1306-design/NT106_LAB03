@@ -298,7 +298,7 @@ namespace LAB03
 
                 client.Connect(
                     txtIP.Text,
-                    8080);
+                    9999);
 
                 string login =
                     "LOGIN|" +

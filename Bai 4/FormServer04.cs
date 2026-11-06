@@ -48,19 +48,29 @@ namespace LAB03
 
             bookedSeats.Clear();
 
-            if (File.Exists("bookedSeats.txt"))
+            string moviePath =
+                Path.Combine(
+                    Application.StartupPath,
+                    "movie.txt");
+
+            string seatPath =
+                Path.Combine(
+                    Application.StartupPath,
+                    "bookedSeats.txt");
+
+            if (File.Exists(seatPath))
             {
-                File.Delete("bookedSeats.txt");
+                File.Delete(seatPath);
             }
 
             File.WriteAllLines(
-                "movie.txt",
+                moviePath,
                 new string[]
                 {
-            "Avatar,500,420,42000000",
-            "Avengers,600,580,69600000",
-            "Titanic,400,250,22500000",
-            "Batman,450,300,28500000"
+        "Avatar,500,420,42000000",
+        "Avengers,600,580,69600000",
+        "Titanic,400,250,22500000",
+        "Batman,450,300,28500000"
                 });
 
             rtbLog.AppendText(
@@ -78,8 +88,13 @@ namespace LAB03
 
                 movies.Clear();
 
+                string moviePath =
+                    Path.Combine(
+                        Application.StartupPath,
+                        "movie.txt");
+
                 string[] lines =
-                    File.ReadAllLines("movie.txt");
+                    File.ReadAllLines(moviePath);
 
                 foreach (string line in lines)
                 {
@@ -137,7 +152,7 @@ namespace LAB03
                 listener =
                     new TcpListener(
                         IPAddress.Any,
-                        8080);
+                        9999);
 
                 listener.Start();
 
@@ -159,10 +174,14 @@ namespace LAB03
                 rtbLog.AppendText(
                     "Server Started...\n");
             }
-            catch (Exception ex)
+            catch (SocketException ex)
             {
                 MessageBox.Show(
-                    ex.Message);
+                    $"Socket Error: {ex.SocketErrorCode}\n{ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString());
             }
         }
 
@@ -179,23 +198,21 @@ namespace LAB03
 
                     // Gửi danh sách ghế đã bán cho client mới
 
-                    foreach (string item in bookedSeats)
+                    var groupedSeats = bookedSeats
+                        .GroupBy(x => x.Split('_')[0]);
+
+                    foreach (var group in groupedSeats)
                     {
-                        string[] parts =
-                            item.Split('_');
+                        string movie = group.Key;
 
-                        string movie =
-                            parts[0];
+                        string seats = string.Join(",",
+                            group.Select(x => x.Split('_')[1]));
 
-                        string seat =
-                            parts[1];
+                        string msg =
+                            $"UPDATE|{movie}|{seats}";
 
                         byte[] data =
-                            Encoding.UTF8.GetBytes(
-                                "UPDATE|" +
-                                movie +
-                                "|" +
-                                seat);
+                            Encoding.UTF8.GetBytes(msg);
 
                         client.GetStream().Write(
                             data,
@@ -423,8 +440,13 @@ namespace LAB03
                     $"{m.Name},{m.Total},{m.Sold},{m.Revenue}");
             }
 
+            string moviePath =
+                Path.Combine(
+                    Application.StartupPath,
+                    "movie.txt");
+
             File.WriteAllLines(
-                "movie.txt",
+                moviePath,
                 lines);
         }
 
@@ -440,8 +462,13 @@ namespace LAB03
         }
         private void SaveSeats()
         {
+            string seatPath =
+                Path.Combine(
+                    Application.StartupPath,
+                    "bookedSeats.txt");
+
             File.WriteAllLines(
-                "bookedSeats.txt",
+                seatPath,
                 bookedSeats);
         }
     }

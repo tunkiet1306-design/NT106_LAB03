@@ -109,7 +109,7 @@ namespace LAB03
 
                 client.Connect(
                     txtIP.Text,
-                    8080);
+                    9999);
 
                 receiveThread =
                     new Thread(
