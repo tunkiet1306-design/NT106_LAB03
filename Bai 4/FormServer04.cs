@@ -7,7 +7,6 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 namespace LAB03
 {
     public partial class FormServer04 : Form
@@ -21,7 +20,8 @@ namespace LAB03
         }
 
         private TcpListener listener;
-
+        private TextBox txtPort;
+        private Label lblPort;
         private List<TcpClient> clients =
             new List<TcpClient>();
 
@@ -45,7 +45,19 @@ namespace LAB03
             dgvMovie.Columns.Add("Sold", "Đã Bán");
             dgvMovie.Columns.Add("Remain", "Còn Lại");
             dgvMovie.Columns.Add("Revenue", "Doanh Thu");
+            lblPort = new Label();
+            lblPort.Text = "Port:";
+            lblPort.Location = new Point(360, 145);
+            lblPort.AutoSize = true;
 
+            txtPort = new TextBox();
+            txtPort.Name = "txtPort";
+            txtPort.Text = "8080";
+            txtPort.Location = new Point(400, 142);
+            txtPort.Width = 100;
+
+            this.Controls.Add(lblPort);
+            this.Controls.Add(txtPort);
             bookedSeats.Clear();
 
             string moviePath =
@@ -149,10 +161,18 @@ namespace LAB03
                     return;
                 }
 
+                int port;
+
+                if (!int.TryParse(txtPort.Text, out port))
+                {
+                    MessageBox.Show("Port không hợp lệ!");
+                    return;
+                }
+
                 listener =
                     new TcpListener(
                         IPAddress.Any,
-                        9999);
+                        port);
 
                 listener.Start();
 

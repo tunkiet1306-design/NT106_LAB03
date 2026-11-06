@@ -10,7 +10,6 @@
         private DataGridView dgvMovie;
         private RichTextBox rtbLog;
         private ProgressBar progressBar1;
-
         protected override void Dispose(bool disposing)
         {
             if (disposing && (components != null))
