@@ -28,9 +28,10 @@ namespace LAB03
 
         private string selectedUser = "";
         private TextBox txtIP;
+        private TextBox txtPort;
         private TextBox txtUser;
         private TextBox txtMessage;
-
+        private Label lblPort;
         private Button btnConnect;
         private Button btnSend;
         private ListBox lstUsers;
@@ -81,6 +82,19 @@ namespace LAB03
             txtIP.Location = new System.Drawing.Point(120, 25);
             txtIP.Size = new System.Drawing.Size(180, 27);
             txtIP.Text = "127.0.0.1";
+
+            lblPort = new Label();
+            lblPort.Text = "Port:";
+            lblPort.Location =
+                new System.Drawing.Point(20, 70);
+            lblPort.AutoSize = true;
+
+            txtPort = new TextBox();
+            txtPort.Location =
+                new System.Drawing.Point(120, 65);
+            txtPort.Size =
+                new System.Drawing.Size(100, 27);
+            txtPort.Text = "8080";
 
             lblUser = new Label();
             lblUser.Text = "Username:";
@@ -136,6 +150,9 @@ namespace LAB03
 
             Controls.Add(lblIP);
             Controls.Add(txtIP);
+
+            Controls.Add(lblPort);
+            Controls.Add(txtPort);
 
             Controls.Add(lblUser);
             Controls.Add(txtUser);
@@ -296,9 +313,19 @@ namespace LAB03
             {
                 client = new TcpClient();
 
+                int port;
+
+                if (!int.TryParse(txtPort.Text, out port))
+                {
+                    MessageBox.Show(
+                        "Port không hợp lệ!");
+
+                    return;
+                }
+
                 client.Connect(
                     txtIP.Text,
-                    8080);
+                    port);
 
                 string login =
                     "LOGIN|" +

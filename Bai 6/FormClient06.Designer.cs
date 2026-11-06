@@ -19,13 +19,13 @@
             SuspendLayout();
 
             AutoScaleDimensions =
-                new SizeF(8F, 20F);
+                new System.Drawing.SizeF(8F, 20F);
 
             AutoScaleMode =
-                AutoScaleMode.Font;
+                System.Windows.Forms.AutoScaleMode.Font;
 
             ClientSize =
-                new Size(800, 450);
+                new System.Drawing.Size(800, 450);
 
             Name =
                 "FormClient06";
