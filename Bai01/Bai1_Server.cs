@@ -79,23 +79,23 @@ namespace LAB03
             {
                 while (!_dangDongForm)
                 {
-                    // Nhận dữ liệu từ Client
+                    // 1. Nhận dữ liệu từ Client
                     byte[] receiveBytes = udpClient.Receive(ref remoteIpEndPoint);
 
-                    // Giải mã chuẩn UTF8 hỗ trợ tiếng Việt có dấu
                     string returnData = Encoding.UTF8.GetString(receiveBytes);
                     string message = $"{remoteIpEndPoint.Address}:{returnData}";
-
                     UpdateUI(message);
+
+                    // 2. GỬI PHẢN HỒI (ACK) VỀ CHO CLIENT ĐỂ XÁC NHẬN ĐÚNG CỔNG
+                    byte[] ackBytes = Encoding.UTF8.GetBytes("ACK");
+                    udpClient.Send(ackBytes, ackBytes.Length, remoteIpEndPoint);
                 }
             }
             catch (SocketException)
             {
-                // Khi đóng Form, udpClient.Close() được gọi sẽ thoát vòng lặp Receive tại đây
             }
             catch (ObjectDisposedException)
             {
-                // Bỏ qua khi Socket đã được giải phóng lúc đóng Form
             }
         }
         private void UpdateUI(string message)
