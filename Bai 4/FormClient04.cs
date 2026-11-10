@@ -191,6 +191,8 @@ namespace LAB03
 
                 string msg =
                     "BOOK|" +
+                    txtName.Text +
+                    "|" +
                     cboMovie.Text +
                     "|" +
                     seats;

@@ -111,11 +111,6 @@ namespace LAB03
             btnConnect.Size = new System.Drawing.Size(120, 35);
             btnConnect.Click += btnConnect_Click;
 
-            lblOnline = new Label();
-            lblOnline.Text = "Online Users";
-            lblOnline.Location = new System.Drawing.Point(20, 70);
-            lblOnline.AutoSize = true;
-
             lstUsers = new ListBox();
             lstUsers.Location = new System.Drawing.Point(20, 95);
             lstUsers.Size = new System.Drawing.Size(220, 360);
@@ -311,11 +306,22 @@ namespace LAB03
         {
             try
             {
+                if (client != null &&
+                    client.Connected)
+                {
+                    MessageBox.Show(
+                        "Đã kết nối tới Server!");
+
+                    return;
+                }
+
                 client = new TcpClient();
 
                 int port;
 
-                if (!int.TryParse(txtPort.Text, out port))
+                if (!int.TryParse(
+                        txtPort.Text,
+                        out port))
                 {
                     MessageBox.Show(
                         "Port không hợp lệ!");
@@ -350,8 +356,6 @@ namespace LAB03
 
                 receiveThread.Start();
 
-                MessageBox.Show(
-                    "Connected!");
             }
             catch (Exception ex)
             {
@@ -419,10 +423,10 @@ namespace LAB03
                         break;
 
                     string receiveData =
-    Encoding.UTF8.GetString(
-        buffer,
-        0,
-        bytesRead);
+                    Encoding.UTF8.GetString(
+                        buffer,
+                        0,
+                        bytesRead);
 
                     string[] messages =
                         receiveData.Split(
@@ -434,6 +438,21 @@ namespace LAB03
 
                         Invoke(new Action(() =>
                         {
+                            if (msg == "USERNAME_EXISTS")
+                            {
+                                MessageBox.Show(
+                                    "Username đã tồn tại!");
+
+                                if (client != null)
+                                {
+                                    client.Close();
+                                }
+
+                                btnConnect.Enabled = true;
+
+                                return;
+                            }
+
                             if (msg.StartsWith(
                                 "USERLIST|"))
                             {
@@ -527,8 +546,8 @@ namespace LAB03
                                 rtbChat.ReadOnly = true;
                             }
                             else if (
-        msg.StartsWith(
-        "PIMG|"))
+                            msg.StartsWith(
+                            "PIMG|"))
                             {
                                 string[] p =
                                     msg.Split(
@@ -565,8 +584,8 @@ namespace LAB03
                                 rtbChat.ReadOnly = true;
                             }
                             else if (
-        msg.StartsWith(
-        "FILE|"))
+                            msg.StartsWith(
+                            "FILE|"))
                             {
                                 string[] p =
                                     msg.Split(
@@ -583,9 +602,9 @@ namespace LAB03
                                     p[3];
 
                                 string saveFolder =
-        Path.Combine(
-            Application.StartupPath,
-            "ReceivedFiles");
+                                Path.Combine(
+                                    Application.StartupPath,
+                                    "ReceivedFiles");
 
                                 Directory.CreateDirectory(
                                     saveFolder);
@@ -608,13 +627,13 @@ namespace LAB03
 
                             }
                             else if (
-        msg.StartsWith(
-        "PFILE|"))
+                                msg.StartsWith(
+                                "PFILE|"))
                             {
                                 rtbChat.AppendText(
-        "[DEBUG] " +
-        msg +
-        "\n");
+                                    "[DEBUG] " +
+                                    msg +
+                                    "\n");
                                 string[] p =
                                     msg.Split(
                                         '|',
@@ -673,6 +692,7 @@ namespace LAB03
                                     + p[1]
                                     + "\n");
                             }
+
                         }));
                     }
                 }
@@ -796,6 +816,21 @@ namespace LAB03
                     ex.Message);
             }
         }
+        protected override void OnFormClosing(
+            FormClosingEventArgs e)
+        {
+            try
+            {
+                if (client != null)
+                {
+                    client.Close();
+                }
+            }
+            catch
+            {
+            }
 
+            base.OnFormClosing(e);
+        }
     }
 }

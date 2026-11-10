@@ -201,6 +201,19 @@ namespace LAB03
                         username =
                             parts[1];
 
+                        if (clients.ContainsKey(username))
+                        {
+                            SendToClient(
+                                client,
+                                "USERNAME_EXISTS");
+
+                            client.Close();
+
+                            return;
+                        }
+
+                        clients[username] = client;
+
                         clients[username] =
                             client;
 
@@ -262,13 +275,20 @@ namespace LAB03
                     }
                     else if (parts[0] == "PIMG")
                     {
-                        string to =
-                            parts[2];
+                        string from = parts[1];
+                        string to = parts[2];
 
                         if (clients.ContainsKey(to))
                         {
                             SendToClient(
                                 clients[to],
+                                msg);
+                        }
+
+                        if (clients.ContainsKey(from))
+                        {
+                            SendToClient(
+                                clients[from],
                                 msg);
                         }
                     }
@@ -300,13 +320,20 @@ namespace LAB03
                     }
                     else if (parts[0] == "PFILE")
                     {
-                        string to =
-                            parts[2];
+                        string from = parts[1];
+                        string to = parts[2];
 
                         if (clients.ContainsKey(to))
                         {
                             SendToClient(
                                 clients[to],
+                                msg);
+                        }
+
+                        if (clients.ContainsKey(from))
+                        {
+                            SendToClient(
+                                clients[from],
                                 msg);
                         }
                     }
@@ -414,6 +441,34 @@ namespace LAB03
             EventArgs e)
         {
 
+        }
+
+        protected override void OnFormClosing(
+        FormClosingEventArgs e)
+        {
+            try
+            {
+                if (listener != null)
+                {
+                    listener.Stop();
+                }
+
+                foreach (TcpClient client in clients.Values)
+                {
+                    try
+                    {
+                        client.Close();
+                    }
+                    catch
+                    {
+                    }
+                }
+            }
+            catch
+            {
+            }
+
+            base.OnFormClosing(e);
         }
     }
 }
