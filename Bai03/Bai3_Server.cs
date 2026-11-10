@@ -50,31 +50,57 @@ namespace LAB03
                 // 1. Tạo Socket TCP
                 listenerSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
-                // 2. Lắng nghe trên mọi card mạng, cổng 8080
-                listenerSocket.Bind(new IPEndPoint(IPAddress.Any, 8080));
-                listenerSocket.Listen(10);
-                AddLog("Server started! Đang lắng nghe...");
-
-                // 3. Chấp nhận kết nối từ Client
-                clientSocket = listenerSocket.Accept();
-                AddLog("Đã kết nối với: " + clientSocket.RemoteEndPoint);
-
-                // 4. Nhận dữ liệu liên tục
-                byte[] recv = new byte[1024];
-                while (true)
+                // Xử lý cấp phát Port động an toàn
+                try
                 {
-                    int bytesReceived = clientSocket.Receive(recv);
-                    if (bytesReceived == 0) break;   // Client ngắt kết nối
+                    listenerSocket.Bind(new IPEndPoint(IPAddress.Any, 8080));
+                }
+                catch (SocketException)
+                {
+                    // Nếu lỗi (bị chiếm port), hủy socket lỗi và tạo socket mới yêu cầu OS cấp port bất kỳ (Port 0)
+                    listenerSocket.Close();
+                    listenerSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                    listenerSocket.Bind(new IPEndPoint(IPAddress.Any, 0));
+                }
 
-                    string text = Encoding.UTF8.GetString(recv, 0, bytesReceived).Trim();
-                    AddLog("Client: " + text);
+                // Lấy port thực tế đang được sử dụng
+                int actualPort = ((IPEndPoint)listenerSocket.LocalEndPoint).Port;
 
-                    if (text == "quit") break;
+                // 2. Lắng nghe
+                listenerSocket.Listen(10);
+                AddLog($"Server started! Đang lắng nghe trên cổng: {actualPort}");
+
+                // 3. Chấp nhận kết nối liên tục bằng vòng lặp while
+                while (isListening)
+                {
+                    clientSocket = listenerSocket.Accept();
+                    AddLog("Đã kết nối với: " + clientSocket.RemoteEndPoint);
+
+                    // 4. Nhận dữ liệu liên tục từ Client hiện tại
+                    byte[] recv = new byte[1024];
+                    while (true)
+                    {
+                        int bytesReceived = clientSocket.Receive(recv);
+                        if (bytesReceived == 0) break;   // Client ngắt kết nối
+
+                        string text = Encoding.UTF8.GetString(recv, 0, bytesReceived).Trim();
+                        AddLog("Client: " + text);
+
+                        if (text == "quit") break;
+                    }
+
+                    // Client hiện tại ngắt kết nối, đóng socket để chuẩn bị đón Client mới
+                    clientSocket?.Close();
+                    AddLog("Client đã ngắt kết nối. Đang chờ Client mới...");
                 }
             }
             catch (SocketException ex)
             {
-                AddLog("Lỗi socket: " + ex.Message);
+                // Bỏ qua lỗi nếu lỗi phát sinh do người dùng tắt server (hủy listening)
+                if (isListening)
+                {
+                    AddLog("Lỗi socket: " + ex.Message);
+                }
             }
             catch (ObjectDisposedException) { }   // form hoặc socket đã đóng
             finally
