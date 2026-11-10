@@ -41,7 +41,16 @@ namespace LAB03
                 cboMovie_SelectedIndexChanged;
 
             lstSelectedSeat.Items.Clear();
+            this.lblPort.AutoSize = true;
+            this.lblPort.Location = new System.Drawing.Point(20, 70);
+            this.lblPort.Name = "lblPort";
+            this.lblPort.Size = new System.Drawing.Size(32, 20);
+            this.lblPort.Text = "Port";
 
+            this.txtPort.Location = new System.Drawing.Point(120, 67);
+            this.txtPort.Name = "txtPort";
+            this.txtPort.Size = new System.Drawing.Size(100, 26);
+            this.txtPort.Text = "8080";
             for (char row = 'A'; row <= 'E'; row++)
             {
                 for (int col = 1; col <= 5; col++)
@@ -106,10 +115,17 @@ namespace LAB03
             {
                 client =
                     new TcpClient();
+                int port;
+
+                if (!int.TryParse(txtPort.Text, out port))
+                {
+                    MessageBox.Show("Port không hợp lệ!");
+                    return;
+                }
 
                 client.Connect(
                     txtIP.Text,
-                    8080);
+                    port);
 
                 receiveThread =
                     new Thread(
@@ -175,6 +191,8 @@ namespace LAB03
 
                 string msg =
                     "BOOK|" +
+                    txtName.Text +
+                    "|" +
                     cboMovie.Text +
                     "|" +
                     seats;

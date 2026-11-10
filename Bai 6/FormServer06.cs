@@ -24,8 +24,11 @@ namespace LAB03
             CreateUI();
         }
 
-        private Button btnStart;
-        private RichTextBox rtbLog;
+        private Button btnStart = null!;
+        private RichTextBox rtbLog = null!;
+
+        private Label lblPort = null!;
+        private TextBox txtPort = null!;
 
         private void CreateUI()
         {
@@ -42,6 +45,25 @@ namespace LAB03
                 new System.Drawing.Point(
                     20,
                     20);
+            lblPort = new Label();
+
+            lblPort.Text = "Port:";
+            lblPort.Location =
+                new System.Drawing.Point(
+                    200,
+                    30);
+
+            lblPort.AutoSize = true;
+
+            txtPort = new TextBox();
+
+            txtPort.Text = "8080";
+            txtPort.Location =
+                new System.Drawing.Point(
+                    250,
+                    27);
+
+            txtPort.Width = 100;
 
             btnStart.Click +=
                 btnStart_Click;
@@ -63,6 +85,9 @@ namespace LAB03
 
             Controls.Add(btnStart);
 
+            Controls.Add(lblPort);
+            Controls.Add(txtPort);
+
             Controls.Add(rtbLog);
         }
 
@@ -72,10 +97,22 @@ namespace LAB03
         {
             try
             {
+                int port;
+
+                if (!int.TryParse(
+                        txtPort.Text,
+                        out port))
+                {
+                    MessageBox.Show(
+                        "Port không hợp lệ!");
+
+                    return;
+                }
+
                 listener =
                     new TcpListener(
                         IPAddress.Any,
-                        8080);
+                        port);
 
                 listener.Start();
 
@@ -164,6 +201,19 @@ namespace LAB03
                         username =
                             parts[1];
 
+                        if (clients.ContainsKey(username))
+                        {
+                            SendToClient(
+                                client,
+                                "USERNAME_EXISTS");
+
+                            client.Close();
+
+                            return;
+                        }
+
+                        clients[username] = client;
+
                         clients[username] =
                             client;
 
@@ -225,13 +275,20 @@ namespace LAB03
                     }
                     else if (parts[0] == "PIMG")
                     {
-                        string to =
-                            parts[2];
+                        string from = parts[1];
+                        string to = parts[2];
 
                         if (clients.ContainsKey(to))
                         {
                             SendToClient(
                                 clients[to],
+                                msg);
+                        }
+
+                        if (clients.ContainsKey(from))
+                        {
+                            SendToClient(
+                                clients[from],
                                 msg);
                         }
                     }
@@ -263,39 +320,20 @@ namespace LAB03
                     }
                     else if (parts[0] == "PFILE")
                     {
-                        string from =
-                            parts[1];
-
-                        string to =
-                            parts[2];
-
-                        string filename =
-                            parts[3];
-
-                        string content =
-                            parts[4];
+                        string from = parts[1];
+                        string to = parts[2];
 
                         if (clients.ContainsKey(to))
                         {
                             SendToClient(
                                 clients[to],
-                                "PFILE|" +
-                                from +
-                                "|" +
-                                filename +
-                                "|" +
-                                content);
+                                msg);
                         }
-                    }
-                    else if (parts[0] == "PFILE")
-                    {
-                        string to =
-                            parts[2];
 
-                        if (clients.ContainsKey(to))
+                        if (clients.ContainsKey(from))
                         {
                             SendToClient(
-                                clients[to],
+                                clients[from],
                                 msg);
                         }
                     }
@@ -403,6 +441,34 @@ namespace LAB03
             EventArgs e)
         {
 
+        }
+
+        protected override void OnFormClosing(
+        FormClosingEventArgs e)
+        {
+            try
+            {
+                if (listener != null)
+                {
+                    listener.Stop();
+                }
+
+                foreach (TcpClient client in clients.Values)
+                {
+                    try
+                    {
+                        client.Close();
+                    }
+                    catch
+                    {
+                    }
+                }
+            }
+            catch
+            {
+            }
+
+            base.OnFormClosing(e);
         }
     }
 }

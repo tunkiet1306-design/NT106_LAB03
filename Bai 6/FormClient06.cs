@@ -28,9 +28,10 @@ namespace LAB03
 
         private string selectedUser = "";
         private TextBox txtIP;
+        private TextBox txtPort;
         private TextBox txtUser;
         private TextBox txtMessage;
-
+        private Label lblPort;
         private Button btnConnect;
         private Button btnSend;
         private ListBox lstUsers;
@@ -82,6 +83,19 @@ namespace LAB03
             txtIP.Size = new System.Drawing.Size(180, 27);
             txtIP.Text = "127.0.0.1";
 
+            lblPort = new Label();
+            lblPort.Text = "Port:";
+            lblPort.Location =
+                new System.Drawing.Point(20, 70);
+            lblPort.AutoSize = true;
+
+            txtPort = new TextBox();
+            txtPort.Location =
+                new System.Drawing.Point(120, 65);
+            txtPort.Size =
+                new System.Drawing.Size(100, 27);
+            txtPort.Text = "8080";
+
             lblUser = new Label();
             lblUser.Text = "Username:";
             lblUser.Location = new System.Drawing.Point(330, 30);
@@ -96,11 +110,6 @@ namespace LAB03
             btnConnect.Location = new System.Drawing.Point(650, 22);
             btnConnect.Size = new System.Drawing.Size(120, 35);
             btnConnect.Click += btnConnect_Click;
-
-            lblOnline = new Label();
-            lblOnline.Text = "Online Users";
-            lblOnline.Location = new System.Drawing.Point(20, 70);
-            lblOnline.AutoSize = true;
 
             lstUsers = new ListBox();
             lstUsers.Location = new System.Drawing.Point(20, 95);
@@ -136,6 +145,9 @@ namespace LAB03
 
             Controls.Add(lblIP);
             Controls.Add(txtIP);
+
+            Controls.Add(lblPort);
+            Controls.Add(txtPort);
 
             Controls.Add(lblUser);
             Controls.Add(txtUser);
@@ -294,11 +306,32 @@ namespace LAB03
         {
             try
             {
+                if (client != null &&
+                    client.Connected)
+                {
+                    MessageBox.Show(
+                        "Đã kết nối tới Server!");
+
+                    return;
+                }
+
                 client = new TcpClient();
+
+                int port;
+
+                if (!int.TryParse(
+                        txtPort.Text,
+                        out port))
+                {
+                    MessageBox.Show(
+                        "Port không hợp lệ!");
+
+                    return;
+                }
 
                 client.Connect(
                     txtIP.Text,
-                    8080);
+                    port);
 
                 string login =
                     "LOGIN|" +
@@ -323,8 +356,6 @@ namespace LAB03
 
                 receiveThread.Start();
 
-                MessageBox.Show(
-                    "Connected!");
             }
             catch (Exception ex)
             {
@@ -392,10 +423,10 @@ namespace LAB03
                         break;
 
                     string receiveData =
-    Encoding.UTF8.GetString(
-        buffer,
-        0,
-        bytesRead);
+                    Encoding.UTF8.GetString(
+                        buffer,
+                        0,
+                        bytesRead);
 
                     string[] messages =
                         receiveData.Split(
@@ -407,6 +438,21 @@ namespace LAB03
 
                         Invoke(new Action(() =>
                         {
+                            if (msg == "USERNAME_EXISTS")
+                            {
+                                MessageBox.Show(
+                                    "Username đã tồn tại!");
+
+                                if (client != null)
+                                {
+                                    client.Close();
+                                }
+
+                                btnConnect.Enabled = true;
+
+                                return;
+                            }
+
                             if (msg.StartsWith(
                                 "USERLIST|"))
                             {
@@ -500,8 +546,8 @@ namespace LAB03
                                 rtbChat.ReadOnly = true;
                             }
                             else if (
-        msg.StartsWith(
-        "PIMG|"))
+                            msg.StartsWith(
+                            "PIMG|"))
                             {
                                 string[] p =
                                     msg.Split(
@@ -538,8 +584,8 @@ namespace LAB03
                                 rtbChat.ReadOnly = true;
                             }
                             else if (
-        msg.StartsWith(
-        "FILE|"))
+                            msg.StartsWith(
+                            "FILE|"))
                             {
                                 string[] p =
                                     msg.Split(
@@ -556,9 +602,9 @@ namespace LAB03
                                     p[3];
 
                                 string saveFolder =
-        Path.Combine(
-            Application.StartupPath,
-            "ReceivedFiles");
+                                Path.Combine(
+                                    Application.StartupPath,
+                                    "ReceivedFiles");
 
                                 Directory.CreateDirectory(
                                     saveFolder);
@@ -581,13 +627,13 @@ namespace LAB03
 
                             }
                             else if (
-        msg.StartsWith(
-        "PFILE|"))
+                                msg.StartsWith(
+                                "PFILE|"))
                             {
                                 rtbChat.AppendText(
-        "[DEBUG] " +
-        msg +
-        "\n");
+                                    "[DEBUG] " +
+                                    msg +
+                                    "\n");
                                 string[] p =
                                     msg.Split(
                                         '|',
@@ -646,6 +692,7 @@ namespace LAB03
                                     + p[1]
                                     + "\n");
                             }
+
                         }));
                     }
                 }
@@ -769,6 +816,21 @@ namespace LAB03
                     ex.Message);
             }
         }
+        protected override void OnFormClosing(
+            FormClosingEventArgs e)
+        {
+            try
+            {
+                if (client != null)
+                {
+                    client.Close();
+                }
+            }
+            catch
+            {
+            }
 
+            base.OnFormClosing(e);
+        }
     }
 }
