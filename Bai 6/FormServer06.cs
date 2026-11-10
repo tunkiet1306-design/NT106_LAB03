@@ -348,14 +348,26 @@ namespace LAB03
                         string content =
                             parts[3];
 
+                        string privateMsg =
+                            "PM|" +
+                            from +
+                            "|" +
+                            content;
+
+                        // Gửi cho người nhận
                         if (clients.ContainsKey(to))
                         {
                             SendToClient(
                                 clients[to],
-                                "PM|" +
-                                from +
-                                "|" +
-                                content);
+                                privateMsg);
+                        }
+
+                        // Gửi lại cho người gửi
+                        if (clients.ContainsKey(from))
+                        {
+                            SendToClient(
+                                clients[from],
+                                privateMsg);
                         }
                     }
                 }
