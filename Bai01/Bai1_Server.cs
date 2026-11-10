@@ -12,42 +12,104 @@ namespace LAB03
 {
     public partial class Bai1_Server : Form
     {
+        private readonly List<UdpClient> _danhSachServerDangChay = new List<UdpClient>();
+        private bool _dangDongForm = false;
         public Bai1_Server()
         {
             InitializeComponent();
+            this.FormClosing += Bai1_Server_FormClosing;
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
-            Thread serverThread = new Thread(new ThreadStart(StartListening));
-            serverThread.IsBackground = true;
-            serverThread.Start();
+            string portText = txtPort.Text.Trim();
+
+            // 1. Kiểm tra định dạng Port (Phục vụ TC_01_05)
+            if (!int.TryParse(portText, out int port) || port < 1 || port > 65535)
+            {
+                MessageBox.Show(
+                    "Port không hợp lệ!\nVui lòng nhập số nguyên trong khoảng từ 1 đến 65535 (ví dụ: 8080).",
+                    "Lỗi định dạng Port",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                txtPort.Focus();
+                return;
+            }
+
+            // 2. Khởi tạo UdpClient gắn vào cổng Port (Phục vụ TC_01_07 khi bấm Listen 2 lần cùng Port)
+            try
+            {
+                // Nếu cổng này đã được Listen trước đó, lệnh new UdpClient(port) sẽ lập tức ném SocketException
+                UdpClient udpServer = new UdpClient(port);
+                _danhSachServerDangChay.Add(udpServer);
+
+                Thread serverThread = new Thread(() => StartListening(udpServer))
+                {
+                    IsBackground = true
+                };
+                serverThread.Start();
+
+                UpdateUI($"[Hệ thống] Đang lắng nghe UDP tại cổng {port}...");
+            }
+            catch (SocketException ex)
+            {
+                // Bắt lỗi trùng cổng (Address already in use) khi nhấn Listen lần 2 trên cùng 1 Port
+                MessageBox.Show(
+                    $"Không thể lắng nghe trên cổng {port}!\nCổng này đã được mở hoặc đang bị chiếm dụng.\n\nChi tiết: {ex.Message}",
+                    "Lỗi xung đột cổng (SocketException)",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    "Lỗi khi khởi động UDP Server: " + ex.Message,
+                    "Lỗi",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
 
         }
 
-        private void StartListening()
+        private void StartListening(UdpClient udpClient)
         {
-            int port = int.Parse(txtPort.Text);
-            UdpClient udpClient = new UdpClient(port);
             IPEndPoint remoteIpEndPoint = new IPEndPoint(IPAddress.Any, 0);
 
-            while (true)
+            try
             {
-                // Nhận dữ liệu
-                Byte[] receiveBytes = udpClient.Receive(ref remoteIpEndPoint);
-                // Hỗ trợ tiếng Việt có dấu (UTF8)
-                string returnData = Encoding.UTF8.GetString(receiveBytes);
-                string message = $"{remoteIpEndPoint.Address}:{returnData}";
+                while (!_dangDongForm)
+                {
+                    // 1. Nhận dữ liệu từ Client
+                    byte[] receiveBytes = udpClient.Receive(ref remoteIpEndPoint);
 
-                UpdateUI(message);
+                    string returnData = Encoding.UTF8.GetString(receiveBytes);
+                    string message = $"{remoteIpEndPoint.Address}:{returnData}";
+                    UpdateUI(message);
+
+                    // 2. GỬI PHẢN HỒI (ACK) VỀ CHO CLIENT ĐỂ XÁC NHẬN ĐÚNG CỔNG
+                    byte[] ackBytes = Encoding.UTF8.GetBytes("ACK");
+                    udpClient.Send(ackBytes, ackBytes.Length, remoteIpEndPoint);
+                }
+            }
+            catch (SocketException)
+            {
+            }
+            catch (ObjectDisposedException)
+            {
             }
         }
         private void UpdateUI(string message)
         {
-            // Thread-safe call để tránh lỗi InvalidOperationException
+            if (this.IsDisposed || rtbReceivedMessages.IsDisposed)
+            {
+                return;
+            }
+
+            // Thread-safe call với InvokeRequired để tránh lỗi InvalidOperationException
             if (rtbReceivedMessages.InvokeRequired)
             {
-                rtbReceivedMessages.Invoke(new MethodInvoker(delegate {
+                rtbReceivedMessages.Invoke(new MethodInvoker(delegate
+                {
                     rtbReceivedMessages.AppendText(message + Environment.NewLine);
                 }));
             }
@@ -56,17 +118,20 @@ namespace LAB03
                 rtbReceivedMessages.AppendText(message + Environment.NewLine);
             }
         }
-        public void serverThread()
+        private void Bai1_Server_FormClosing(object sender, FormClosingEventArgs e)
         {
-            UdpClient udpClient = new UdpClient(8080);
-            while (true)
+            _dangDongForm = true;
+            foreach (UdpClient server in _danhSachServerDangChay)
             {
-                IPEndPoint RemoteIPEndPoint = new IPEndPoint(IPAddress.Any, 0);
-                Byte[] receiveBytes = udpClient.Receive(ref RemoteIPEndPoint);
-                string returnData = Encoding.ASCII.GetString(receiveBytes);
-                string message = RemoteIPEndPoint.Address.ToString() + ":" + returnData.ToString();
-                
+                try
+                {
+                    server.Close();
+                }
+                catch
+                {
+                }
             }
+            _danhSachServerDangChay.Clear();
         }
     }
 }
